@@ -1,0 +1,208 @@
+import javax.swing.*; 
+import java.awt.*; 
+import java.awt.event.*; 
+import java.text.NumberFormat; 
+import java.text.DecimalFormat; 
+import java.io.*; 
+
+public class MortgageGUI2 extends JFrame implements ActionListener { 
+double total = 0; //monthly payment initalization of variables 
+double i = 0; //interest 
+double p = 0; //principle 
+int t = 0; //term in years 
+int m = 0; //monthly term 
+double j = 0; //daily interest rate 
+double mPayment = 0; 
+double monthlyInterest = 0; 
+double principleOnly = 0; 
+double newBalance = 0; 
+int choice = 0; 
+
+//setup row 
+JPanel row = new JPanel(); 
+JLabel heading = new JLabel("Mortgage Calculator", JLabel.CENTER); 
+//setup row 1 
+JPanel row1 = new JPanel(); 
+JLabel principle = new JLabel("Amount to Borrow:", JLabel.RIGHT); 
+JTextField princ = new JTextField("100000", 6); 
+JLabel term = new JLabel(" Years:", JLabel.RIGHT); 
+JTextField years = new JTextField("", 3); 
+JLabel rate = new JLabel(" Interest Rate:", JLabel.RIGHT); 
+JTextField irate = new JTextField("", 4); 
+//setup row 2 
+JPanel row2 = new JPanel(); 
+JLabel termInt = new JLabel("Select the Term and interest rate:", JLabel.LEFT); 
+String[] formats = {"Choose from below or enter your own","7 years @ 5.35%", "15 years @ 5.5%", "30 years @ 5.75%","Enter a file in line below"}; 
+JComboBox combo = new JComboBox(); 
+//setup row 3 
+JPanel row3 = new JPanel(); 
+JLabel fileText = new JLabel("Enter file name and location to read from:", JLabel.RIGHT); 
+JTextField textFile = new JTextField("", 12); 
+//setup row 4 
+JPanel row4 = new JPanel(); 
+JLabel monthlyPayment = new JLabel("Monthly Payment:", JLabel.RIGHT); 
+JTextField mthPay = new JTextField(9); 
+//setup row 5 
+JPanel row5 = new JPanel(); 
+JButton Calculate = new JButton("Calculate"); 
+JButton Reset = new JButton("Reset"); 
+JButton Quit = new JButton("Quit"); 
+//setup row 6 
+JPanel row6 = new JPanel(); 
+JTextArea mortg = new JTextArea(5, 40); 
+JLabel header = new JLabel("Payment# Principle Balance Interest n",JLabel.LEFT); 
+JScrollPane scroll = new JScrollPane(mortg, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
+JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); 
+
+
+public MortgageGUI2() { //creating layout for the GUI 
+super("Mortgage Calculator"); 
+setSize (500, 720); 
+setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE); 
+Container pane = getContentPane(); 
+GridLayout layout = new GridLayout(7, 1, 1, 1); 
+pane.setLayout(layout); 
+setVisible(true); 
+Calculate.addActionListener(this); 
+Reset.addActionListener(this); 
+Quit.addActionListener(this); 
+princ.addActionListener(this); 
+combo.addActionListener(this); 
+textFile.addActionListener(this); 
+FlowLayout layout0 = new FlowLayout(FlowLayout.CENTER, 2, 2); 
+row.setLayout(layout0); 
+row.add(heading); 
+pane.add(row); 
+FlowLayout layout1 = new FlowLayout(FlowLayout.LEFT, 2, 2); 
+row1.setLayout(layout1); 
+row1.add(principle); 
+row1.add(princ); 
+row1.add(term); 
+row1.add(years); 
+row1.add(rate); 
+row1.add(irate); 
+pane.add(row1); 
+FlowLayout layout2 = new FlowLayout(FlowLayout.LEFT, 2, 2); 
+row2.setLayout(layout2); 
+row2.add(termInt); 
+row2.add(combo); 
+pane.add(row2); 
+for (int f=0; f < formats.length; f++) 
+combo.addItem(formats[f]); 
+FlowLayout layout3 = new FlowLayout(FlowLayout.LEFT, 2, 2); 
+row3.setLayout(layout3); 
+row3.add(fileText); 
+row3.add(textFile); 
+pane.add(row3); 
+FlowLayout layout4 = new FlowLayout(FlowLayout.LEFT, 2, 2); 
+row4.setLayout(layout4); 
+row4.add(monthlyPayment); 
+row4.add(mthPay); 
+mthPay.setEditable(false); 
+pane.add(row4); 
+FlowLayout layout5 = new FlowLayout(FlowLayout.CENTER, 2, 2); 
+row5.setLayout(layout5); 
+row5.add(Calculate); 
+row5.add(Reset); 
+row5.add(Quit); 
+pane.add(row5); 
+FlowLayout layout6 = new FlowLayout(FlowLayout.CENTER, 2, 2); 
+row6.setLayout(layout6); 
+row6.add(header); 
+row6.add(scroll); 
+mortg.setEditable(false); 
+pane.add(row6); 
+
+setVisible(true); 
+} 
+
+public void actionPerformed (ActionEvent evt){ 
+Object source = evt.getSource(); 
+choice = combo.getSelectedIndex(); 
+if (source == Calculate){ //calculates mortgage when Calculate button is clicked 
+switch (choice) { 
+case 0: 
+calculate(); 
+break; 
+case 1: 
+years.setText("7"); 
+irate.setText("5.35"); 
+calculate(); 
+break; 
+case 2: 
+years.setText("15"); 
+irate.setText("5.50"); 
+calculate(); 
+break; 
+case 3: 
+years.setText("30"); 
+irate.setText("5.75"); 
+calculate(); 
+break; 
+case 4: 
+readText(); 
+calculate(); 
+break; 
+} 
+
+} 
+else if (source == Reset){ //Resets values to a default value when pressed 
+princ.setText("100000"); 
+mthPay.setText(""); 
+mortg.setText(""); 
+years.setText(""); 
+irate.setText(""); 
+textFile.setText(""); 
+total = 0; 
+
+
+} 
+else if (source == Quit){ //exits program when quit button is pressed 
+System.exit(0); 
+} 
+mortg.setCaretPosition(0); 
+} 
+
+public void readText(){ 
+try { 
+FileReader file = new FileReader(textFile.getText()); 
+BufferedReader buff = new BufferedReader(file); 
+boolean eof = false; 
+int x = 1; 
+String line =""; 
+while (line != null) { 
+line = buff.readLine(); 
+if (x == 1) 
+years.setText(line); 
+else if (x == 2) 
+irate.setText(line); 
+x++; 
+} 
+buff.close(); 
+} catch (IOException e) { 
+JOptionPane.showMessageDialog(null, "Error -- " + e.toString(),"Warning", JOptionPane.WARNING_MESSAGE); 
+} 
+}
+public void calculate(){ 
+NumberFormat dollarFormat = NumberFormat.getInstance(); 
+dollarFormat.setMaximumFractionDigits(2); 
+dollarFormat.setMinimumFractionDigits(2); 
+try{ 
+t = Integer.parseInt(years.getText()); 
+i = Double.parseDouble(irate.getText()); 
+p = Double.parseDouble(princ.getText()); 
+j = i/1200; 
+m = t*12; 
+monthlyInterest = p * j; 
+total = (p*(j/(1 - Math.pow((1+j),-m)))); //actual mortgage calculation 
+principleOnly= mPayment - monthlyInterest; 
+newBalance = p - principleOnly; 
+mthPay.setText("$"+dollarFormat.format(total)); 
+mortg.setText("Payment#t Principlet Balancet Interest n" ); 
+for (int w = 1; w < (m+1); w++){ 
+monthlyInterest = p * j; 
+mPayment = total; 
+principleOnly= mPayment - monthlyInterest; 
+newBalance = p - principleOnly; 
+mthPay.setText("$"+dollarFormat.format(total)):
+}
